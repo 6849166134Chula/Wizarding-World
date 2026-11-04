@@ -6,6 +6,16 @@
   <meta name="theme-color" content="#0f1123">
   <title>หมวกคัดสรรบรรพ</title>
   <style>
+/* ล็อกการคลิกทั้งหน้าจอชั่วคราว */
+#interactionLock {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: transparent;
+    display: none;
+    cursor: wait;
+}
+
     * { box-sizing: border-box; }
     body {
       font-family: 'Chakra Petch', Arial, sans-serif;
@@ -74,12 +84,10 @@
 
     /* พื้นหลังเปลี่ยนตามสีประจำบ้าน */
       background:
-        radial-gradient(
-            circle at 50% 20%,
-            var(--house-accent, #ae2525) 0%,
-            var(--house-bg, #250000) 55%,
-            #080808 100%
-        );
+        radial-gradient(circle at 50% 20%,
+        var(--house-accent, #29204f) 0%,
+        var(--house-bg, #0f1123) 55%,
+        #080b18 100%);
 
     z-index: 100;
     overflow-y: auto;
@@ -88,7 +96,7 @@
     align-items: center;
     justify-content: center;
 
-    transition: background 0.5s ease;
+    transition: background 0.7s ease;
     }
 
 /* เฟดหน้าผลการคัดสรรออกก่อนกลับหน้าหลัก */
@@ -117,11 +125,11 @@
             var(--house-bg, #250000) 75%
         );
 
-    border: 4px solid var(--house-border, #740001);
+    border: 4px solid var(--house-border, #7928ca);
     border-radius: 25px;
 
     box-shadow:
-        0 0 20px var(--house-glow, #74000199),
+        0 0 20px var(--house-glow, rgba(121,40,202,.35)),
         0 15px 40px rgba(0,0,0,.5);
 }
 
@@ -206,6 +214,21 @@
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 25px;
+}
+
+/* แผงควบคุมเสียง */
+.audio-panel {
+    position: fixed; top: 12px; right: 12px; z-index: 200;
+    display: flex; align-items: center; gap: 9px; padding: 9px 12px;
+    border: 1px solid rgba(251,211,141,.35); border-radius: 14px;
+    background: rgba(26,28,53,.92); box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    backdrop-filter: blur(8px); color: #fbd38d; font-size: 13px;
+}
+.audio-panel button { margin: 0; padding: 7px 10px; font-size: 13px; box-shadow: none; }
+.audio-panel input[type="range"] { width: 75px; accent-color: #fbd38d; }
+@media (max-width: 480px) {
+    .audio-panel { top: 8px; right: 8px; padding: 7px; gap: 6px; }
+    .audio-panel input[type="range"] { width: 55px; }
 }
 
 /* รองรับโทรศัพท์มือถือ */
@@ -348,6 +371,11 @@
   </style>
 </head>
 <body>
+<div class="audio-panel" aria-label="ตั้งค่าเสียง">
+  <button type="button" id="audioToggle" aria-pressed="true" title="เปิดหรือปิดเสียง">🔊 เสียง</button>
+  <label for="volumeControl">ระดับ</label>
+  <input type="range" id="volumeControl" min="0" max="100" value="35" aria-label="ระดับเสียง">
+</div>
 <main class="container" id="mainApp">
     <div style="font-size:70px;margin-bottom:10px;" aria-hidden="true">🧙‍♂️🔮</div>
     <h2>หมวกคัดสรรบรรพ</h2>
@@ -532,35 +560,35 @@ const houseData = [
 // ฟังก์ชันแสดงผลบ้านที่ได้รับ
 // ==========================================
 function showHouse(selectedHouse, studentId, studentName) {
-
-    const card = document.getElementById("houseCard");
-    const screen = document.getElementById("houseScreen");
-
-    // กำหนดสีตามบ้านที่ได้รับ
-    card.style.setProperty("--house-border", selectedHouse.borderColor);
-    card.style.setProperty("--house-text", selectedHouse.textColor);
-    card.style.setProperty("--house-bg", selectedHouse.backgroundColor);
-    card.style.setProperty("--house-accent", selectedHouse.accentColor);
-    card.style.setProperty("--house-glow", selectedHouse.borderColor + "99");
-
-    // กำหนดสีพื้นหลังหน้าจอทั้งหมดตามบ้าน
-    screen.style.setProperty("--house-border", selectedHouse.borderColor);
-    screen.style.setProperty("--house-text", selectedHouse.textColor);
-    screen.style.setProperty("--house-bg", selectedHouse.backgroundColor);
-    screen.style.setProperty("--house-accent", selectedHouse.accentColor);
-    screen.style.setProperty("--house-glow", selectedHouse.borderColor + "99");
-
-    // แสดงข้อมูลบ้าน
+    // ระหว่างสุ่มยังไม่กำหนดสีบ้าน เพื่อไม่ให้ใบ้ผลลัพธ์
     document.getElementById("screenHouseEmoji").textContent = selectedHouse.emoji;
     document.getElementById("screenHouseName").textContent = selectedHouse.name;
     document.getElementById("screenHouseQuote").textContent = selectedHouse.quote;
-
-    // แสดงรหัสนิสิตและชื่อ
     document.getElementById("screenId").textContent = studentId;
     document.getElementById("screenStudentName").textContent = studentName;
 
-    // เปิดหน้าจอผลการคัดสรร
-    document.getElementById("houseScreen").style.display = "flex";
+    const screen = document.getElementById("houseScreen");
+    const card = document.getElementById("houseCard");
+    [screen, card].forEach(target => {
+        target.style.setProperty("--house-border", "#7928ca");
+        target.style.setProperty("--house-text", "#fbd38d");
+        target.style.setProperty("--house-bg", "#0f1123");
+        target.style.setProperty("--house-accent", "#29204f");
+        target.style.setProperty("--house-glow", "rgba(121,40,202,.35)");
+    });
+    screen.style.display = "flex";
+}
+
+// เรียกใช้หลังการ์ดหมุนเสร็จเท่านั้น
+function applyHouseTheme(selectedHouse) {
+    [document.getElementById("houseScreen"), document.getElementById("houseCard")]
+      .forEach(target => {
+        target.style.setProperty("--house-border", selectedHouse.borderColor);
+        target.style.setProperty("--house-text", selectedHouse.textColor);
+        target.style.setProperty("--house-bg", selectedHouse.backgroundColor);
+        target.style.setProperty("--house-accent", selectedHouse.accentColor);
+        target.style.setProperty("--house-glow", selectedHouse.borderColor + "99");
+      });
 }
 
 const $ = (id) => document.getElementById(id);
@@ -717,6 +745,7 @@ async function processIdentity(event) {
     result.classList.remove('magic-reveal');
     void result.offsetWidth;
     result.classList.add('magic-reveal');
+    playPatronusAppearSound();
 
     setStatus(
       'ตรวจสอบข้อมูลสำเร็จ' +
@@ -732,6 +761,30 @@ async function processIdentity(event) {
   }
 }
 
+// ==================================
+// ระบบล็อกการคลิกหน้าจอ
+// ==================================
+let interactionLockTimer = null;
+let sortingAnimationTimer = null;
+let sortingUnlockTimer = null;
+
+function lockScreen(duration = 800) {
+    const lock = $('interactionLock');
+
+    clearTimeout(interactionLockTimer);
+
+    lock.style.display = 'block';
+
+    interactionLockTimer = setTimeout(() => {
+        lock.style.display = 'none';
+        interactionLockTimer = null;
+    }, duration);
+}
+
+// ==================================
+// ฟังก์ชันอื่น ๆ ของระบบ
+// ==================================
+
 function sortingHouse() {
     if (!selectedStudent) {
         setStatus('กรุณาตรวจสอบรหัสนิสิตก่อนเข้าสู่พิธีคัดสรรบ้าน', true);
@@ -742,6 +795,7 @@ function sortingHouse() {
 
     isSortingHouse = true;
     $('houseButton').disabled = true;
+    $('houseButton').style.pointerEvents = 'none';
 
     // สุ่มเลือกบ้านจาก houseData
     const house = houseData[
@@ -757,8 +811,9 @@ function sortingHouse() {
     houseName.classList.remove('name-reveal');
     houseEmoji.classList.remove('name-reveal');
 
-    // เริ่มหมุนการ์ด
+    // เริ่มหมุนการ์ด โดยใช้พื้นหลังกลางตลอดการสุ่ม
     card.classList.add('is-sorting');
+    playCardSpinSound();
 
     // แสดงผลบ้าน
     showHouse(
@@ -771,12 +826,14 @@ function sortingHouse() {
     document.body.style.overflow = 'hidden';
 
     // รอให้การ์ดหมุนเสร็จ 2.2 วินาที
-    setTimeout(() => {
+    sortingAnimationTimer = setTimeout(() => {
 
-    // หยุดหมุน
+    // หยุดหมุนก่อน แล้วจึงค่อยเปิดเผยสีประจำบ้าน
     card.classList.remove('is-sorting');
+    applyHouseTheme(house);
 
     // ระเบิดเวทมนตร์
+    playMagicBurstSound();
     card.classList.remove('magic-burst');
     void card.offsetWidth;
     card.classList.add('magic-burst');
@@ -789,10 +846,12 @@ function sortingHouse() {
 
     houseName.classList.add('name-reveal');
     houseEmoji.classList.add('name-reveal');
+    playRevealSound();
 
     // ปลดล็อกปุ่ม
     isSortingHouse = false;
     $('houseButton').disabled = false;
+    $('houseButton').style.pointerEvents = 'auto';
 
   }, 2200);
 
@@ -805,6 +864,11 @@ function closeHouseScreen() {
   // ป้องกันการกดปิดซ้ำระหว่างเอฟเฟกต์เฟด
   if (isClosingHouse || screen.style.display !== 'flex') return;
   isClosingHouse = true;
+  clearTimeout(sortingAnimationTimer);
+  clearTimeout(sortingUnlockTimer);
+
+  sortingAnimationTimer = null;
+  sortingUnlockTimer = null;
   screen.classList.remove('is-closing');
   void screen.offsetWidth;
   screen.classList.add('is-closing');
@@ -813,11 +877,152 @@ function closeHouseScreen() {
   setTimeout(() => {
     screen.style.display = 'none';
     screen.classList.remove('is-closing');
+
+    // รีเซ็ต Animation เพื่อให้เริ่มรอบใหม่ได้
+    const card = $('houseCard');
+    const houseName = $('screenHouseName');
+    const houseEmoji = $('screenHouseEmoji');
+    card.classList.remove('is-sorting', 'magic-burst');
+    houseName.classList.remove('name-reveal');
+    houseEmoji.classList.remove('name-reveal');
+
+    // คืนค่าหน้าหลัก
     document.body.style.overflow = '';
+
+    isSortingHouse = false;
     isClosingHouse = false;
+
+    $('houseButton').disabled = false;
+    $('houseButton').style.pointerEvents = 'auto';
+
+        // ล็อกการคลิกทั้งหน้าจอ 1 วินาที
+        lockScreen(800);
+
     $('houseButton').focus();
   }, 450);
 }
+
+
+// ==========================================
+// ระบบเสียงประกอบด้วย Web Audio API
+// ไม่ต้องใช้ไฟล์เสียงภายนอก
+// ==========================================
+let audioContext = null, masterGain = null, bgmNodes = [];
+let audioEnabled = true, audioReady = false, lastTypingSound = 0;
+
+function initAudio() {
+  if (audioReady) return;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return;
+  audioContext = new AudioCtx();
+  masterGain = audioContext.createGain();
+  masterGain.gain.value = Number($('volumeControl').value) / 100;
+  masterGain.connect(audioContext.destination);
+  audioReady = true;
+  if (audioContext.state === 'suspended') audioContext.resume();
+  startAmbientBgm();
+}
+function ensureAudio() {
+  if (!audioReady) initAudio();
+  if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+}
+function setMasterVolume() {
+  if (audioReady) masterGain.gain.setTargetAtTime(
+    audioEnabled ? Number($('volumeControl').value)/100 : 0,
+    audioContext.currentTime, 0.08
+  );
+}
+function startAmbientBgm() {
+  if (!audioReady || bgmNodes.length) return;
+  [110, 164.81, 220].forEach((frequency, i) => {
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const lfo = audioContext.createOscillator();
+    const lfoGain = audioContext.createGain();
+    osc.type = i === 1 ? 'sine' : 'triangle';
+    osc.frequency.value = frequency;
+    gain.gain.value = [0.018, 0.012, 0.008][i];
+    lfo.frequency.value = 0.08 + i * 0.025;
+    lfoGain.gain.value = 0.006;
+    lfo.connect(lfoGain); lfoGain.connect(gain.gain);
+    osc.connect(gain); gain.connect(masterGain);
+    osc.start(); lfo.start();
+    bgmNodes.push({osc, lfo});
+  });
+}
+function tone(freq, duration, type='sine', volume=0.08, endFreq=null, delay=0) {
+  if (!audioEnabled) return;
+  ensureAudio();
+  if (!audioReady) return;
+  const now = audioContext.currentTime + delay;
+  const osc = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  if (endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(1,endFreq), now+duration);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(volume, now+0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now+duration);
+  osc.connect(gain); gain.connect(masterGain);
+  osc.start(now); osc.stop(now+duration+0.03);
+}
+function playClickSound() { tone(620, .07, 'sine', .045, 420); }
+function playTypingSound() {
+  const now = Date.now();
+  if (now-lastTypingSound < 65) return;
+  lastTypingSound = now;
+  tone(900+Math.random()*250, .025, 'square', .018, 650);
+}
+function playCardSpinSound() {
+  if (!audioEnabled) return;
+  ensureAudio();
+  if (!audioReady) return;
+  const now = audioContext.currentTime;
+  const osc = audioContext.createOscillator(), gain = audioContext.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(95, now);
+  osc.frequency.exponentialRampToValueAtTime(520, now+1.85);
+  gain.gain.setValueAtTime(.0001, now);
+  gain.gain.linearRampToValueAtTime(.045, now+.35);
+  gain.gain.setValueAtTime(.045, now+1.65);
+  gain.gain.exponentialRampToValueAtTime(.0001, now+2.15);
+  osc.connect(gain); gain.connect(masterGain);
+  osc.start(now); osc.stop(now+2.2);
+}
+function playMagicBurstSound() {
+  tone(180, .55, 'sawtooth', .11, 45);
+  tone(880, .45, 'sine', .075, 220, .03);
+  tone(1320, .65, 'sine', .045, 660, .08);
+}
+// เสียงเมื่อสัตว์ผู้พิทักษ์ปรากฏ
+function playPatronusAppearSound() {
+  tone(392, 0.35, 'sine', 0.045, 587);
+  tone(784, 0.45, 'sine', 0.04, 1046, 0.12);
+  tone(1174, 0.55, 'sine', 0.035, 1568, 0.22);
+  tone(1568, 0.75, 'sine', 0.045, 2093, 0.38);
+}
+function playPatronusAppearSound() {
+  // เสียงประกายเวทมนตร์เริ่มปรากฏ
+  tone(392, 0.35, 'sine', 0.045, 587);
+  // เสียงระยิบระยับ
+  tone(784, 0.45, 'sine', 0.04, 1046, 0.12);
+  tone(1174, 0.55, 'sine', 0.035, 1568, 0.22);
+  // เสียงเวทมนตร์ปิดท้าย
+  tone(1568, 0.75, 'sine', 0.045, 2093, 0.38);
+}
+$('audioToggle').addEventListener('click', () => {
+  ensureAudio();
+  audioEnabled = !audioEnabled;
+  $('audioToggle').textContent = audioEnabled ? '🔊 เสียง' : '🔇 ปิดเสียง';
+  $('audioToggle').setAttribute('aria-pressed', String(audioEnabled));
+  setMasterVolume();
+});
+$('volumeControl').addEventListener('input', () => { ensureAudio(); setMasterVolume(); });
+document.addEventListener('pointerdown', ensureAudio, { once: true });
+$('studentId').addEventListener('input', playTypingSound);
+document.querySelectorAll('button').forEach(button => {
+  if (button.id !== 'audioToggle') button.addEventListener('click', playClickSound);
+});
 
 $('identityForm').addEventListener('submit', processIdentity);
 $('houseButton').addEventListener('click', sortingHouse);
@@ -833,5 +1038,8 @@ document.addEventListener('keydown', (event) => {
   }
 });
 </script>
+
+<div id="interactionLock"></div>
+
 </body>
 </html>
