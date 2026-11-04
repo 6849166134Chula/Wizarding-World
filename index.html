@@ -46,11 +46,23 @@
       border-radius: 15px; border: 2px solid #ff0080;
       display: none; text-align: left;
     }
+
     .cohort-badge {
-      font-size: 70px; font-weight: bold; text-align: center; color: #ff0080;
-      filter: drop-shadow(0 0 10px rgba(255,0,128,.6)); margin: 10px 0 20px;
+      font-size: 70px;
+      font-weight: bold;
+      text-align: center;
+      color: #ff0080;
+      filter: drop-shadow(0 0 10px currentColor);
+      margin: 10px 0 20px;
+      transition: color 0.5s ease, filter 0.5s ease;
     }
-    .info-item { font-size: 16px; margin: 12px 0; line-height: 1.6; overflow-wrap: anywhere; }
+
+    .info-item { 
+      font-size: 16px;
+      margin: 12px 0;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      }
     .info-label { font-weight: bold; color: #a0aec0; }
     .highlight-text { color: #fbd38d; font-weight: bold; }
     .house-screen {
@@ -78,10 +90,22 @@
 
     transition: background 0.5s ease;
     }
+
+/* เฟดหน้าผลการคัดสรรออกก่อนกลับหน้าหลัก */
+.house-screen.is-closing {
+    animation: houseScreenFadeOut 0.45s ease-in forwards;
+    pointer-events: none;
+}
+
+@keyframes houseScreenFadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
 /* การ์ดแสดงผลบ้าน */
 .house-card {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     max-width: 550px;
     margin: auto;
     padding: 40px 30px;
@@ -99,6 +123,42 @@
     box-shadow:
         0 0 20px var(--house-glow, #74000199),
         0 15px 40px rgba(0,0,0,.5);
+}
+
+/* ด้านหลังไพ่ที่แสดงระหว่างการสุ่ม */
+.sorting-card-back {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at center, rgba(255,255,255,.12), transparent 55%),
+        linear-gradient(145deg, #29204f, #100d25 65%, #34204d);
+    box-shadow: inset 0 0 0 8px rgba(255,255,255,.07),
+                inset 0 0 25px rgba(255,215,130,.25);
+    pointer-events: none;
+}
+
+.sorting-card-symbol {
+    color: #fbd38d;
+    font-size: 48px;
+    line-height: 1;
+    text-shadow: 0 0 18px rgba(251,211,141,.8);
+}
+
+.sorting-card-label {
+    color: #fbd38d;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 5px;
+    border-top: 1px solid rgba(251,211,141,.6);
+    border-bottom: 1px solid rgba(251,211,141,.6);
+    padding: 10px 0;
 }
 
 /* ไอคอนประจำบ้าน */
@@ -164,6 +224,127 @@
         font-size: 65px;
     }
 }
+
+/* =================================
+   1. เอฟเฟกต์เปิดเผยผลตรวจสอบรายชื่อ
+================================= */
+
+.magic-reveal {
+  animation: magicReveal 0.8s ease-out both;
+}
+
+@keyframes magicReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.75);
+    filter: brightness(3) blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
+    filter: brightness(1.8) blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+/* =================================
+   2. เอฟเฟกต์หมุนการ์ด
+================================= */
+
+.house-card.is-sorting {
+  transform-style: preserve-3d;
+  will-change: transform;
+  /* เร่งความเร็วอย่างต่อเนื่องจากเริ่มต้นจนจบ ไม่แบ่งเป็นช่วงกระชาก */
+  animation: magicalSpin 2.2s cubic-bezier(.42, 0, 1, 1) both;
+}
+
+/* ระหว่างหมุน ซ่อนรายละเอียดทั้งหมดและแสดงเฉพาะด้านหลังไพ่ */
+.house-card.is-sorting > :not(.sorting-card-back) {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.house-card.is-sorting .sorting-card-back {
+  display: flex;
+}
+
+@keyframes magicalSpin {
+  0% {
+    transform: perspective(1000px) rotateY(0deg) scale(.22);
+  }
+  100% {
+    /* หมุนต่อเนื่องหลายรอบ พร้อมขยายเต็มขนาด โดยความเร็วเพิ่มขึ้นเรื่อย ๆ */
+    transform: perspective(1000px) rotateY(1440deg) scale(1);
+  }
+}
+
+/* =================================
+   3. เอฟเฟกต์ระเบิดเวทมนตร์
+================================= */
+
+.house-card.magic-burst::after {
+  content: "";
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  inset: -35%;
+
+  background:
+    radial-gradient(circle, #fff 0%, #ffeaa0 5%, transparent 18%),
+    radial-gradient(circle at 20% 30%, #ffffff 0%, transparent 5%),
+    radial-gradient(circle at 80% 25%, #ffeaa0 0%, transparent 6%),
+    radial-gradient(circle at 30% 80%, #ffffff 0%, transparent 5%),
+    radial-gradient(circle at 75% 75%, #f5d77a 0%, transparent 7%);
+
+  animation: magicExplosion 0.9s ease-out forwards;
+}
+
+@keyframes magicExplosion {
+  0% {
+    opacity: 1;
+    transform: scale(0.1) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(90deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8) rotate(180deg);
+  }
+}
+
+/* =================================
+   4. เอฟเฟกต์เผยชื่อบ้าน
+================================= */
+
+.name-reveal {
+  animation: revealHouseName 0.8s ease-out both;
+}
+
+@keyframes revealHouseName {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(25px);
+    filter: blur(10px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.2) translateY(-5px);
+    filter: blur(0);
+    text-shadow: 0 0 25px currentColor;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
   </style>
 </head>
 <body>
@@ -200,6 +381,11 @@
       </div>
 
       <div class="info-item">
+        <span class="info-label">🎨 สีประจำบรรพ:</span>
+        <span id="outColor" class="highlight-text"></span>
+      </div>
+
+      <div class="info-item">
         <span class="info-label">💬 คำพูดติดปากตัวละคร:</span>
         <span id="outQuote" style="font-style:italic;color:#cbd5e0;"></span>
       </div>
@@ -213,6 +399,12 @@
 </main>
   <section id="houseScreen" class="house-screen" aria-modal="true" role="dialog" aria-label="ผลการคัดสรรบ้าน">
     <div class="house-card" id="houseCard">
+      <!-- ด้านหลังไพ่: แสดงเฉพาะระหว่างกำลังสุ่ม -->
+      <div class="sorting-card-back" aria-hidden="true">
+        <div class="sorting-card-symbol">✦</div>
+        <div class="sorting-card-label">HOGWARTS</div>
+        <div class="sorting-card-symbol">✧</div>
+      </div>
       <div class="house-emoji" id="screenHouseEmoji">🦁</div>
       <div class="house-name" id="screenHouseName">Gryffindor</div>
 <div style="text-align:left;background:rgba(0,0,0,.3);padding:20px;border-radius:12px;margin-bottom:20px;">
@@ -242,14 +434,64 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyEqI1yFUTZQ5MQl3bRH_Ik
 
 let selectedStudent = null;
 let requestInProgress = false;
+let isSortingHouse = false;
+let isClosingHouse = false;
 
 const patronusData = {
-  1: { cohort: 1, name: "Harry Potter (แฮร์รี่ พอตเตอร์)", animal: "กวางตัวผู้ (Stag) 🦌", color: "สีแดง", quote: "Expecto Patronum! (ผู้พิทักษ์จงออกมา!)" },
-  2: { cohort: 2, name: "Severus Snape (เซเวอร์รัส สเนป)", animal: "กวางตัวเมีย (Doe) 🦌", color: "สีเขียว", quote: "Always. (ตลอดไป)" },
-  3: { cohort: 3, name: "Hermione Granger (เฮอร์ไมโอนี่ เกรนเจอร์)", animal: "นาก (Otter) 🦦", color: "สีม่วง", quote: "ฉันคิดว่าการอ่านหนังสือและการใช้สมองมันสำคัญกว่าความเก่งนะ" },
-  4: { cohort: 4, name: "Luna Lovegood (ลูน่า เลิฟกู๊ด)", animal: "กระต่ายป่า (Hare) 🐇", color: "สีน้ำเงิน", quote: "สิ่งที่เราสูญเสียไป มักจะกลับมาหาเราในท้ายที่สุด" },
-  5: { cohort: 5, name: "Arthur Weasley (อาเธอร์ วีสลีย์)", animal: "พังพอน (Weasel) 🐾", color: "สีส้ม", quote: "หน้าที่ของปลั๊กไฟคืออะไรกันแน่? แล้วพวกมักเกิ้ลส่งจดหมายกันยังไงนะ?" },
-  6: { cohort: 6, name: "Seamus Finnigan (เชมัส ฟินนิกัน)", animal: "สุนัขจิ้งจอก (Fox) 🦊", color: "สีเหลือง", quote: "ตื่นเต้นชะมัด! ฉันถนัดเรื่องทำให้สิ่งต่างๆ มันระเบิดอยู่แล้ว!" }
+  1: { 
+    cohort: 1,
+    name: "Harry Potter (แฮร์รี่ พอตเตอร์)",
+    animal: "กวางตัวผู้ (Stag) 🦌",
+    color: "สีแดง",
+    colorEmoji: "🔴",
+    hexColor: "#ff5b5b",
+    quote: "Expecto Patronum! (ผู้พิทักษ์จงออกมา!)"
+  },
+  2: { 
+    cohort: 2,
+    name: "Severus Snape (เซเวอร์รัส สเนป)",
+    animal: "กวางตัวเมีย (Doe) 🦌",
+    color: "สีเขียว",
+    colorEmoji: "🟢",
+    hexColor: "#55d68b",
+    quote: "Always. (ตลอดไป)" 
+  },
+  3: { 
+    cohort: 3,
+    name: "Hermione Granger (เฮอร์ไมโอนี่ เกรนเจอร์)",
+    animal: "นาก (Otter) 🦦",
+    color: "สีม่วง",
+    colorEmoji: "🟣",
+    hexColor: "#c084fc",
+    quote: "ฉันคิดว่าการอ่านหนังสือและการใช้สมองมันสำคัญกว่าความเก่งนะ"
+  },
+  4: { 
+    cohort: 4,
+    name: "Luna Lovegood (ลูน่า เลิฟกู๊ด)",
+    animal: "กระต่ายป่า (Hare) 🐇",
+    color: "สีน้ำเงิน",
+    colorEmoji: "🔵",
+    hexColor: "#7dd3fc",
+    quote: "สิ่งที่เราสูญเสียไป มักจะกลับมาหาเราในท้ายที่สุด"
+  },
+  5: { 
+    cohort: 5,
+    name: "Arthur Weasley (อาเธอร์ วีสลีย์)",
+    animal: "พังพอน (Weasel) 🐾",
+    color: "สีส้ม",
+    colorEmoji: "🟠",
+    hexColor: "#fb923c",
+    quote: "หน้าที่ของปลั๊กไฟคืออะไรกันแน่? แล้วพวกมักเกิ้ลส่งจดหมายกันยังไงนะ?"
+  },
+  6: { 
+    cohort: 6,
+    name: "Seamus Finnigan (เชมัส ฟินนิกัน)",
+    animal: "สุนัขจิ้งจอก (Fox) 🦊",
+    color: "สีเหลือง",
+    colorEmoji: "🟡",
+    hexColor: "#facc15",
+    quote: "ตื่นเต้นชะมัด! ฉันถนัดเรื่องทำให้สิ่งต่างๆ มันระเบิดอยู่แล้ว!"
+  }
 };
 
 const houseData = [
@@ -446,14 +688,36 @@ async function processIdentity(event) {
       year: String(student.year || '')
     };
 
-    $('outCohort').textContent = `บรรพ ${chosen.cohort}`;
-    $('outId').textContent = selectedStudent.id;
-    $('outName').textContent = selectedStudent.name;
-    $('outPatronus').textContent =
-      `${chosen.animal} [${chosen.color}] ของ ${chosen.name}`;
-    $('outQuote').textContent = `“${chosen.quote}”`;
+      // แสดงหัวข้อบรรพพร้อมเปลี่ยนสีตามบรรพ
+      $('outCohort').textContent = `บรรพ ${chosen.cohort}`;
+      $('outCohort').style.color = chosen.hexColor;
+      $('outCohort').style.filter =
+      `drop-shadow(0 0 12px ${chosen.hexColor})`;
 
-    $('resultBox').style.display = 'block';
+      // แสดงข้อมูลนิสิต
+      $('outId').textContent = selectedStudent.id;
+      $('outName').textContent = selectedStudent.name;
+
+      // แสดงสัตว์ประจำบรรพ
+      $('outPatronus').textContent =
+      `${chosen.animal} [${chosen.color}] ของ ${chosen.name}`;
+
+      // แสดงสีประจำบรรพพร้อมอิโมจิ
+      $('outColor').textContent =
+      `${chosen.colorEmoji} ${chosen.color}`;
+
+      // แสดงคำพูดประจำตัวละคร
+      $('outQuote').textContent = `“${chosen.quote}”`;
+
+      $('resultBox').style.display = 'block';
+
+// เอฟเฟกต์เปิดเผยข้อมูลนิสิต
+    const result = $('resultBox');
+
+    result.classList.remove('magic-reveal');
+    void result.offsetWidth;
+    result.classList.add('magic-reveal');
+
     setStatus(
       'ตรวจสอบข้อมูลสำเร็จ' +
       (selectedStudent.name ? ' — ' + selectedStudent.name : '') +
@@ -473,25 +737,86 @@ function sortingHouse() {
         setStatus('กรุณาตรวจสอบรหัสนิสิตก่อนเข้าสู่พิธีคัดสรรบ้าน', true);
         return;
     }
+    // ป้องกันการกดปุ่มซ้ำ
+    if (isSortingHouse) return;
+
+    isSortingHouse = true;
+    $('houseButton').disabled = true;
+
     // สุ่มเลือกบ้านจาก houseData
     const house = houseData[
         Math.floor(Math.random() * houseData.length)
     ];
-    // เรียกฟังก์ชันแสดงผลบ้าน
+
+    const card = $('houseCard');
+    const houseName = $('screenHouseName');
+    const houseEmoji = $('screenHouseEmoji');
+
+    // ล้างเอฟเฟกต์เดิม
+    card.classList.remove('magic-burst');
+    houseName.classList.remove('name-reveal');
+    houseEmoji.classList.remove('name-reveal');
+
+    // เริ่มหมุนการ์ด
+    card.classList.add('is-sorting');
+
+    // แสดงผลบ้าน
     showHouse(
         house,
         selectedStudent.id,
         selectedStudent.name
     );
+
     // ปิดการเลื่อนหน้าจอหลัก
     document.body.style.overflow = 'hidden';
+
+    // รอให้การ์ดหมุนเสร็จ 2.2 วินาที
+    setTimeout(() => {
+
+    // หยุดหมุน
+    card.classList.remove('is-sorting');
+
+    // ระเบิดเวทมนตร์
+    card.classList.remove('magic-burst');
+    void card.offsetWidth;
+    card.classList.add('magic-burst');
+
+    // เผยชื่อบ้านและสัญลักษณ์
+    houseName.classList.remove('name-reveal');
+    houseEmoji.classList.remove('name-reveal');
+
+    void houseName.offsetWidth;
+
+    houseName.classList.add('name-reveal');
+    houseEmoji.classList.add('name-reveal');
+
+    // ปลดล็อกปุ่ม
+    isSortingHouse = false;
+    $('houseButton').disabled = false;
+
+  }, 2200);
+
     // โฟกัสปุ่มกลับ
     $('backButton').focus();
 }
 function closeHouseScreen() {
-  $('houseScreen').style.display = 'none';
-  document.body.style.overflow = '';
-  $('houseButton').focus();
+  const screen = $('houseScreen');
+
+  // ป้องกันการกดปิดซ้ำระหว่างเอฟเฟกต์เฟด
+  if (isClosingHouse || screen.style.display !== 'flex') return;
+  isClosingHouse = true;
+  screen.classList.remove('is-closing');
+  void screen.offsetWidth;
+  screen.classList.add('is-closing');
+
+  // ซ่อนหน้าผลลัพธ์หลังเฟดเสร็จ
+  setTimeout(() => {
+    screen.style.display = 'none';
+    screen.classList.remove('is-closing');
+    document.body.style.overflow = '';
+    isClosingHouse = false;
+    $('houseButton').focus();
+  }, 450);
 }
 
 $('identityForm').addEventListener('submit', processIdentity);
