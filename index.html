@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f1123">
+  <title>หมวกคัดสรรบรรพ</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Chakra Petch', Arial, sans-serif;
+      background: #0f1123; color: #e2e8f0; text-align: center;
+      padding: 20px; margin: 0; min-height: 100vh;
+    }
+    .container {
+      max-width: 600px; margin: 40px auto; background: #1a1c35;
+      padding: 40px 30px; border-radius: 20px; border: 2px solid #7928ca;
+      box-shadow: 0 10px 30px rgba(0,0,0,.6); position: relative;
+    }
+    h2 { color: #fbd38d; margin-top: 10px; font-size: 32px; }
+    p { line-height: 1.6; }
+    input.student-input {
+      padding: 14px; width: 90%; margin: 15px auto; font-size: 16px;
+      border-radius: 10px; border: 2px solid #4a5568; background: #2d3748;
+      color: white; text-align: center; outline: none; display: block;
+    }
+    input.student-input:focus { border-color: #ff0080; }
+    button {
+      background: linear-gradient(135deg,#7928ca 0%,#ff0080 100%);
+      color: white; border: 0; padding: 14px 25px; font-size: 16px;
+      font-weight: bold; border-radius: 10px; cursor: pointer;
+      transition: transform .2s, opacity .2s;
+      box-shadow: 0 4px 15px rgba(255,0,128,.3); margin: 15px auto;
+    }
+    button:hover:not(:disabled) { transform: scale(1.03); }
+    button:disabled { opacity: .55; cursor: wait; }
+    .btn-house {
+      background: linear-gradient(135deg,#00b4db 0%,#0083b0 100%);
+      box-shadow: 0 4px 15px rgba(0,180,219,.4);
+      margin-top: 20px; width: 100%;
+    }
+    .btn-back { background: #4a5568; box-shadow: none; margin-top: 30px; }
+    .status { min-height: 24px; color: #fbd38d; font-size: 14px; margin: 5px 0; }
+    .result-box {
+      margin-top: 30px; padding: 25px; background: #23274a;
+      border-radius: 15px; border: 2px solid #ff0080;
+      display: none; text-align: left;
+    }
+    .cohort-badge {
+      font-size: 70px; font-weight: bold; text-align: center; color: #ff0080;
+      filter: drop-shadow(0 0 10px rgba(255,0,128,.6)); margin: 10px 0 20px;
+    }
+    .info-item { font-size: 16px; margin: 12px 0; line-height: 1.6; overflow-wrap: anywhere; }
+    .info-label { font-weight: bold; color: #a0aec0; }
+    .highlight-text { color: #fbd38d; font-weight: bold; }
+    .house-screen {
+      display: none; 
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+
+    /* พื้นหลังเปลี่ยนตามสีประจำบ้าน */
+      background:
+        radial-gradient(
+            circle at 50% 20%,
+            var(--house-accent, #ae2525) 0%,
+            var(--house-bg, #250000) 55%,
+            #080808 100%
+        );
+
+    z-index: 100;
+    overflow-y: auto;
+    padding: 50px 20px;
+
+    align-items: center;
+    justify-content: center;
+
+    transition: background 0.5s ease;
+    }
+/* การ์ดแสดงผลบ้าน */
+.house-card {
+    position: relative;
+    overflow: hidden;
+    max-width: 550px;
+    margin: auto;
+    padding: 40px 30px;
+
+    background:
+        radial-gradient(
+            circle at top,
+            var(--house-accent, #ae2525) 0%,
+            var(--house-bg, #250000) 75%
+        );
+
+    border: 4px solid var(--house-border, #740001);
+    border-radius: 25px;
+
+    box-shadow:
+        0 0 20px var(--house-glow, #74000199),
+        0 15px 40px rgba(0,0,0,.5);
+}
+
+/* ไอคอนประจำบ้าน */
+.house-emoji {
+    width: 120px;
+    height: 120px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 20px;
+    font-size: 75px;
+
+    background: radial-gradient(
+        circle,
+        var(--house-accent),
+        var(--house-bg)
+    );
+
+    border: 3px solid var(--house-text);
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 15px var(--house-glow),
+        0 0 30px var(--house-glow),
+        inset 0 0 15px rgba(255,255,255,.15);
+}
+
+/* ชื่อบ้าน */
+.house-name {
+    color: var(--house-text);
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 25px;
+
+    text-shadow: 0 0 15px var(--house-glow);
+}
+
+/* กล่องประโยคประจำบ้าน */
+.house-quote-box {
+    background: rgba(0,0,0,.45);
+    border: 1px solid var(--house-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+/* รองรับโทรศัพท์มือถือ */
+@media (max-width: 480px) {
+    body { padding: 12px; }
+    .container { margin: 20px auto; padding: 28px 18px; }
+    h2 { font-size: 27px; }
+    .cohort-badge { font-size: 58px; }
+
+    .house-card { padding: 30px 18px; }
+    .house-name { font-size: 27px; }
+
+    .house-emoji {
+        width: 100px;
+        height: 100px;
+        font-size: 65px;
+    }
+}
+  </style>
+</head>
+<body>
+<main class="container" id="mainApp">
+    <div style="font-size:70px;margin-bottom:10px;" aria-hidden="true">🧙‍♂️🔮</div>
+    <h2>หมวกคัดสรรบรรพ</h2>
+    <p style="color:#a0aec0;">จงระบุรหัสนิสิตของเจ้าเพื่อแสดงตัวตนเวทย์มนตร์</p>
+
+    <form id="identityForm">
+      <input type="text" id="studentId" class="student-input"
+        placeholder="จงกรอกรหัสนิสิตของเจ้าที่นี่" autocomplete="off"
+        inputmode="numeric" aria-label="รหัสนิสิต" required>
+      <button type="submit" id="identityButton">✨ การคัดสรรของหมวก ✨</button>
+    </form>
+
+    <div id="statusMessage" class="status" role="status" aria-live="polite"></div>
+
+    <section id="resultBox" class="result-box" aria-live="polite">
+      <div class="cohort-badge" id="outCohort"></div>
+
+      <div class="info-item">
+        <span class="info-label">🆔 รหัสนิสิต:</span>
+        <span id="outId" class="highlight-text"></span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">👤 ชื่อ-สกุล:</span>
+        <span id="outName" class="highlight-text"></span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">✨ สัตว์ประจำบรรพ:</span>
+        <span id="outPatronus" class="highlight-text"></span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">💬 คำพูดติดปากตัวละคร:</span>
+        <span id="outQuote" style="font-style:italic;color:#cbd5e0;"></span>
+      </div>
+
+      <hr style="border:0;border-top:1px solid #4a5568;margin-top:20px;">
+
+      <button type="button" class="btn-house" id="houseButton">
+        ✨ กดเพื่อก้าวสู่พิธีคัดสรรบ้านประจำฮอกวอตส์ ✨
+      </button>
+    </section>
+</main>
+  <section id="houseScreen" class="house-screen" aria-modal="true" role="dialog" aria-label="ผลการคัดสรรบ้าน">
+    <div class="house-card" id="houseCard">
+      <div class="house-emoji" id="screenHouseEmoji">🦁</div>
+      <div class="house-name" id="screenHouseName">Gryffindor</div>
+<div style="text-align:left;background:rgba(0,0,0,.3);padding:20px;border-radius:12px;margin-bottom:20px;">
+
+    <div class="info-item">
+        <span class="info-label" style="color:#fff;">🆔 รหัสนิสิต:</span>
+        <span id="screenId" class="highlight-text"></span>
+    </div>
+
+    <div class="info-item">
+        <span class="info-label" style="color:#fff;">👤 ชื่อ-นามสกุล:</span>
+        <span id="screenStudentName" class="highlight-text"></span>
+    </div>
+
+</div>      <p style="font-size:18px;font-weight:bold;color:#fff;margin-bottom:5px;">📜 ประโยคประจำบ้าน</p>
+      <p id="screenHouseQuote" style="font-size:16px;font-style:italic;color:#e2e8f0;line-height:1.6;margin-bottom:30px;"></p>
+      <button type="button" class="btn-back" id="backButton">กลับสู่หน้าหลัก</button>
+    </div>
+  </section>
+
+<script>
+'use strict';
+
+// Google Apps Script ต้องรองรับ JSONP โดยอ่านพารามิเตอร์ callback
+// และตอบกลับในรูปแบบ callback({...});
+const API_URL = "https://script.google.com/macros/s/AKfycbyEqI1yFUTZQ5MQl3bRH_IkzLzEUfVsVEmoeEhu9BrCJ9TE0nND-84rUR-Q9Or6grj52w/exec";
+
+let selectedStudent = null;
+let requestInProgress = false;
+
+const patronusData = {
+  1: { cohort: 1, name: "Harry Potter (แฮร์รี่ พอตเตอร์)", animal: "กวางตัวผู้ (Stag) 🦌", color: "สีแดงทอง", quote: "Expecto Patronum! (ผู้พิทักษ์จงออกมา!)" },
+  2: { cohort: 2, name: "Severus Snape (เซเวอร์รัส สเนป)", animal: "กวางตัวเมีย (Doe) 🦌", color: "สีเขียวเงิน", quote: "Always. (ตลอดไป)" },
+  3: { cohort: 3, name: "Hermione Granger (เฮอร์ไมโอนี่ เกรนเจอร์)", animal: "นาก (Otter) 🦦", color: "สีม่วงปราชญ์", quote: "ฉันคิดว่าการอ่านหนังสือและการใช้สมองมันสำคัญกว่าความเก่งนะ" },
+  4: { cohort: 4, name: "Luna Lovegood (ลูน่า เลิฟกู๊ด)", animal: "กระต่ายป่า (Hare) 🐇", color: "สีฟ้าพาสเทล", quote: "สิ่งที่เราสูญเสียไป มักจะกลับมาหาเราในท้ายที่สุด" },
+  5: { cohort: 5, name: "Arthur Weasley (อาเธอร์ วีสลีย์)", animal: "พังพอน (Weasel) 🐾", color: "สีส้มสว่าง", quote: "หน้าที่ของปลั๊กไฟคืออะไรกันแน่? แล้วพวกมักเกิ้ลส่งจดหมายกันยังไงนะ?" },
+  6: { cohort: 6, name: "Seamus Finnigan (เชมัส ฟินนิกัน)", animal: "สุนัขจิ้งจอก (Fox) 🦊", color: "สีเหลืองเพลิง", quote: "ตื่นเต้นชะมัด! ฉันถนัดเรื่องทำให้สิ่งต่างๆ มันระเบิดอยู่แล้ว!" }
+};
+
+const houseData = [
+  { 
+    name: "Gryffindor (กริฟฟินดอร์)",
+    emoji: "🦁",
+    borderColor: "#740001",
+    textColor: "#eeba30",
+    backgroundColor: "#250000",
+    accentColor: "#ae2525",
+    quote: "“บ้านอันเป็นที่ตั้งของความกล้าหาญ มีคุณธรรม มีอัศวินผู้หาญกล้า และพร้อมปกป้องผู้อื่นด้วยเกียรติยศสูงสุด”" },
+  { 
+    name: "Slytherin (สลิธีริน)",
+    emoji: "🐍",
+    borderColor: "#1a472a",
+    textColor: "#aaa9ad",
+    backgroundColor: "#061b13",
+    accentColor: "#27734c",
+    quote: "“บ้านของผู้มีความทะเยอทะยาน ใช้สติปัญญาอย่างชาญฉลาดแกมโกง มีความเป็นผู้นำ และมุ่งมั่นสู่ความสำเร็จ”" },
+  { 
+    name: "Ravenclaw (เรเวนคลอ)",
+    emoji: "🦅",
+    borderColor: "#0e1a40",
+    textColor: "#946b2d",
+    backgroundColor: "#071329",
+    accentColor: "#315b91",
+    quote: "“บ้านแห่งปัญญา ความรอบรู้ อันเป็นที่รวบรวมของผู้มีไหวพริบ ความคิดสร้างสรรค์ และการเรียนรู้ที่ไม่มีสิ้นสุด”" },
+  { 
+    name: "Hufflepuff (ฮัฟเฟิลพัฟ)",
+    emoji: "🦡",
+    borderColor: "#ecb939",
+    textColor: "#000000",
+    backgroundColor: "#28200a",
+    accentColor: "#b88b19",
+    quote: "“บ้านอันเปี่ยมด้วยความซื่อสัตย์ มีความอดทน มุ่งมั่นทำงานหนัก และมอบความยุติธรรมให้แก่ทุกผู้คนเท่าเทียมกัน”" }
+];
+// ==========================================
+// ฟังก์ชันแสดงผลบ้านที่ได้รับ
+// ==========================================
+function showHouse(selectedHouse, studentId, studentName) {
+
+    const card = document.getElementById("houseCard");
+    const screen = document.getElementById("houseScreen");
+
+    // กำหนดสีตามบ้านที่ได้รับ
+    card.style.setProperty("--house-border", selectedHouse.borderColor);
+    card.style.setProperty("--house-text", selectedHouse.textColor);
+    card.style.setProperty("--house-bg", selectedHouse.backgroundColor);
+    card.style.setProperty("--house-accent", selectedHouse.accentColor);
+    card.style.setProperty("--house-glow", selectedHouse.borderColor + "99");
+
+    // กำหนดสีพื้นหลังหน้าจอทั้งหมดตามบ้าน
+    screen.style.setProperty("--house-border", selectedHouse.borderColor);
+    screen.style.setProperty("--house-text", selectedHouse.textColor);
+    screen.style.setProperty("--house-bg", selectedHouse.backgroundColor);
+    screen.style.setProperty("--house-accent", selectedHouse.accentColor);
+    screen.style.setProperty("--house-glow", selectedHouse.borderColor + "99");
+
+    // แสดงข้อมูลบ้าน
+    document.getElementById("screenHouseEmoji").textContent = selectedHouse.emoji;
+    document.getElementById("screenHouseName").textContent = selectedHouse.name;
+    document.getElementById("screenHouseQuote").textContent = selectedHouse.quote;
+
+    // แสดงรหัสนิสิตและชื่อ
+    document.getElementById("screenId").textContent = studentId;
+    document.getElementById("screenStudentName").textContent = studentName;
+
+    // เปิดหน้าจอผลการคัดสรร
+    document.getElementById("houseScreen").style.display = "flex";
+}
+
+const $ = (id) => document.getElementById(id);
+
+function setStatus(message, isError = false) {
+  $('statusMessage').textContent = message;
+  $('statusMessage').style.color = isError ? '#fc8181' : '#fbd38d';
+}
+
+// อ่านผลลัพธ์ตามโครงสร้างจริงที่ doGet() ส่งกลับมา
+function lookupStudent(id) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'studentCallback_' + Date.now() + '_' +
+      Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let finished = false;
+    let callbackReceived = false;
+
+    const cleanup = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    };
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(
+        'ไม่ได้รับคำตอบจาก Google Sheets ภายใน 15 วินาที กรุณาตรวจสอบ URL และการ Deploy Google Apps Script'
+      ));
+    }, 15000);
+
+    window[callbackName] = (response) => {
+      callbackReceived = true;
+      cleanup();
+
+      if (!response || typeof response !== 'object') {
+        reject(new Error('ข้อมูลที่ได้รับจาก Google Sheets ไม่ถูกต้อง'));
+        return;
+      }
+
+      // ส่ง error จริงจาก Apps Script กลับไปแสดงบนหน้าเว็บ
+      if (response.success !== true) {
+        reject(new Error(response.error || 'ไม่สามารถตรวจสอบข้อมูลนิสิตได้'));
+        return;
+      }
+
+      const returnedId = String(response.id || '').trim();
+      const clean = value => String(value || '').replace(/[\s-]/g, '').trim();
+
+      if (!returnedId || clean(returnedId) !== clean(id)) {
+        reject(new Error('รหัสนิสิตที่ได้รับจากฐานข้อมูลไม่ตรงกับรหัสที่กรอก'));
+        return;
+      }
+
+      resolve(response);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error(
+        'โหลดข้อมูลจาก Google Apps Script ไม่สำเร็จ กรุณาตรวจสอบการเผยแพร่ Web App และสิทธิ์การเข้าถึง'
+      ));
+    };
+
+    // หากโหลดสคริปต์ได้ แต่ไม่มีการเรียก callback ให้แจ้งสาเหตุ
+    script.onload = () => {
+      setTimeout(() => {
+        if (!callbackReceived && !finished) {
+          cleanup();
+          reject(new Error(
+            'Google Apps Script ตอบกลับมาแต่ไม่ได้เรียก JSONP callback กรุณาตรวจสอบฟังก์ชัน doGet()'
+          ));
+        }
+      }, 0);
+    };
+
+    const separator = API_URL.includes('?') ? '&' : '?';
+    script.src = API_URL + separator +
+      'id=' + encodeURIComponent(id) +
+      '&callback=' + encodeURIComponent(callbackName);
+
+    document.body.appendChild(script);
+  });
+}
+
+function getCohortFromId(id) {
+  const lastDigit = Number(id.slice(-1));
+  if (!Number.isNaN(lastDigit)) return lastDigit === 0 ? 6 : lastDigit % 6;
+  return (id.length % 6) + 1;
+}
+
+async function processIdentity(event) {
+  if (event) event.preventDefault();
+  if (requestInProgress) return;
+
+  const id = $('studentId').value.trim();
+  if (!id) {
+    setStatus('กรุณากรอกรหัสนิสิตก่อนนะครับ', true);
+    $('studentId').focus();
+    return;
+  }
+
+  requestInProgress = true;
+  $('identityButton').disabled = true;
+  $('identityButton').textContent = '⏳ กำลังร่ายคาถาตรวจสอบข้อมูล...';
+  $('resultBox').style.display = 'none';
+  selectedStudent = null;
+  setStatus('กำลังเปิดบันทึกทะเบียนแห่งฮอกวอตส์...');
+
+  try {
+    const student = await lookupStudent(id);
+
+    // ใช้ cohort จากคอลัมน์ D ตามที่ Apps Script ส่งมา
+    const cohortValue = Number(String(student.cohort || '').trim());
+    const cohort = Number.isInteger(cohortValue) && patronusData[cohortValue]
+      ? cohortValue : getCohortFromId(id);
+    const chosen = patronusData[cohort];
+
+    selectedStudent = {
+      id: String(student.id || id).trim(),
+      name: String(student.name || ''),
+      cohort: cohort,
+      year: String(student.year || '')
+    };
+
+    $('outCohort').textContent = `บรรพ ${chosen.cohort}`;
+    $('outId').textContent = selectedStudent.id;
+    $('outName').textContent = selectedStudent.name;
+    $('outPatronus').textContent =
+      `${chosen.animal} [${chosen.color}] ของ ${chosen.name}`;
+    $('outQuote').textContent = `“${chosen.quote}”`;
+
+    $('resultBox').style.display = 'block';
+    setStatus(
+      'ตรวจสอบข้อมูลสำเร็จ' +
+      (selectedStudent.name ? ' — ' + selectedStudent.name : '') +
+      (selectedStudent.year ? ' (ปี ' + selectedStudent.year + ')' : '')
+    );
+  } catch (error) {
+    setStatus(error.message || 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูล', true);
+  } finally {
+    requestInProgress = false;
+    $('identityButton').disabled = false;
+    $('identityButton').textContent = '✨ คำตัดสินของหมวก ✨';
+  }
+}
+
+function sortingHouse() {
+    if (!selectedStudent) {
+        setStatus('กรุณาตรวจสอบรหัสนิสิตก่อนเข้าสู่พิธีคัดสรรบ้าน', true);
+        return;
+    }
+    // สุ่มเลือกบ้านจาก houseData
+    const house = houseData[
+        Math.floor(Math.random() * houseData.length)
+    ];
+    // เรียกฟังก์ชันแสดงผลบ้าน
+    showHouse(
+        house,
+        selectedStudent.id,
+        selectedStudent.name
+    );
+    // ปิดการเลื่อนหน้าจอหลัก
+    document.body.style.overflow = 'hidden';
+    // โฟกัสปุ่มกลับ
+    $('backButton').focus();
+}
+function closeHouseScreen() {
+  $('houseScreen').style.display = 'none';
+  document.body.style.overflow = '';
+  $('houseButton').focus();
+}
+
+$('identityForm').addEventListener('submit', processIdentity);
+$('houseButton').addEventListener('click', sortingHouse);
+$('backButton').addEventListener('click', closeHouseScreen);
+$('studentId').addEventListener('input', () => {
+  selectedStudent = null;
+  $('resultBox').style.display = 'none';
+  setStatus('');
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && $('houseScreen').style.display === 'flex') {
+    closeHouseScreen();
+  }
+});
+</script>
+</body>
+</html>
