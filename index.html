@@ -92,17 +92,15 @@
 
     z-index: 100;
 
-    /* ปิดการเลื่อนซ้าย-ขวา */
+    /* ปิดการเลื่อนซ้าย-ขวา แต่อนุญาตให้เลื่อนขึ้น-ลง */
     overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: none;
-
-    /* ยังเลื่อนขึ้น-ลงได้เมื่อเนื้อหายาว */
-    overflow: hidden;
     max-width: 100%;
-
     padding: 50px 20px;
 
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 
     transition: background 0.7s ease;
@@ -380,6 +378,11 @@
   </style>
 </head>
 <body>
+
+<audio id="bgMusic" loop preload="auto">
+    <source src="audio/background.mp3" type="audio/mpeg">
+</audio>
+
 <div class="audio-panel" aria-label="ตั้งค่าเสียง">
   <button type="button" id="audioToggle" aria-pressed="true" title="เปิดหรือปิดเสียง">🔊 เสียง</button>
   <label for="volumeControl">ระดับ</label>
@@ -601,6 +604,7 @@ function applyHouseTheme(selectedHouse) {
 }
 
 const $ = (id) => document.getElementById(id);
+const bgMusic = $('bgMusic');
 
 function setStatus(message, isError = false) {
   $('statusMessage').textContent = message;
@@ -929,17 +933,26 @@ function initAudio() {
   masterGain.connect(audioContext.destination);
   audioReady = true;
   if (audioContext.state === 'suspended') audioContext.resume();
-  startAmbientBgm();
+
 }
 function ensureAudio() {
   if (!audioReady) initAudio();
   if (audioContext && audioContext.state === 'suspended') audioContext.resume();
 }
 function setMasterVolume() {
-  if (audioReady) masterGain.gain.setTargetAtTime(
-    audioEnabled ? Number($('volumeControl').value)/100 : 0,
-    audioContext.currentTime, 0.08
-  );
+  const volume = Number($('volumeControl').value) / 100;
+
+  // ควบคุมระดับเสียงเพลง MP3
+  bgMusic.volume = audioEnabled ? volume : 0;
+
+  // ควบคุมระดับเสียงเอฟเฟกต์เวทมนตร์
+  if (audioReady) {
+    masterGain.gain.setTargetAtTime(
+      audioEnabled ? volume : 0,
+      audioContext.currentTime,
+      0.08
+    );
+  }
 }
 function startAmbientBgm() {
   if (!audioReady || bgmNodes.length) return;
@@ -1005,12 +1018,6 @@ function playMagicBurstSound() {
 }
 // เสียงเมื่อสัตว์ผู้พิทักษ์ปรากฏ
 function playPatronusAppearSound() {
-  tone(392, 0.35, 'sine', 0.045, 587);
-  tone(784, 0.45, 'sine', 0.04, 1046, 0.12);
-  tone(1174, 0.55, 'sine', 0.035, 1568, 0.22);
-  tone(1568, 0.75, 'sine', 0.045, 2093, 0.38);
-}
-function playPatronusAppearSound() {
   // เสียงประกายเวทมนตร์เริ่มปรากฏ
   tone(392, 0.35, 'sine', 0.045, 587);
   // เสียงระยิบระยับ
@@ -1019,28 +1026,70 @@ function playPatronusAppearSound() {
   // เสียงเวทมนตร์ปิดท้าย
   tone(1568, 0.75, 'sine', 0.045, 2093, 0.38);
 }
+// เริ่มเล่นเพลงพื้นหลัง
+function startBackgroundMusic() {
+  if (!audioEnabled) return;
+
+  bgMusic.volume = Number($('volumeControl').value) / 100;
+
+  bgMusic.play().catch(error => {
+    console.log('ไม่สามารถเล่นเพลงพื้นหลังได้:', error);
+  });
+}
+
+// ปุ่มเปิด-ปิดเสียง
 $('audioToggle').addEventListener('click', () => {
   ensureAudio();
+
   audioEnabled = !audioEnabled;
-  $('audioToggle').textContent = audioEnabled ? '🔊 เสียง' : '🔇 ปิดเสียง';
-  $('audioToggle').setAttribute('aria-pressed', String(audioEnabled));
+
+  $('audioToggle').textContent =
+    audioEnabled ? '🔊 เสียง' : '🔇 ปิดเสียง';
+
+  $('audioToggle').setAttribute(
+    'aria-pressed',
+    String(audioEnabled)
+  );
+
+  setMasterVolume();
+
+  if (audioEnabled) {
+    startBackgroundMusic();
+  } else {
+    bgMusic.pause();
+  }
+});
+
+// ปรับระดับเสียง
+$('volumeControl').addEventListener('input', () => {
+  ensureAudio();
   setMasterVolume();
 });
-$('volumeControl').addEventListener('input', () => { ensureAudio(); setMasterVolume(); });
-document.addEventListener('pointerdown', ensureAudio, { once: true });
+
+// เริ่มเพลงเมื่อผู้ใช้แตะเว็บไซต์ครั้งแรก
+document.addEventListener('pointerdown', () => {
+  ensureAudio();
+  startBackgroundMusic();
+}, { once: true });
+
 $('studentId').addEventListener('input', playTypingSound);
+
 document.querySelectorAll('button').forEach(button => {
-  if (button.id !== 'audioToggle') button.addEventListener('click', playClickSound);
+  if (button.id !== 'audioToggle') {
+    button.addEventListener('click', playClickSound);
+  }
 });
 
 $('identityForm').addEventListener('submit', processIdentity);
 $('houseButton').addEventListener('click', sortingHouse);
 $('backButton').addEventListener('click', closeHouseScreen);
+
 $('studentId').addEventListener('input', () => {
   selectedStudent = null;
   $('resultBox').style.display = 'none';
   setStatus('');
 });
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && $('houseScreen').style.display === 'flex') {
     closeHouseScreen();
